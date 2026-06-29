@@ -2,12 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../data/parsers/can_frame_parser.dart';
-import '../../data/parsers/obd_response_parser.dart';
-import '../../domain/entities/obd_dashboard_data.dart';
-import '../../domain/usecases/listen_obd_responses.dart';
-import '../../domain/usecases/request_all_obd_data.dart';
-import '../../domain/usecases/send_obd_request.dart';
+import '../../data/obd_data.dart';
+import '../../domain/obd_domain.dart';
 import 'obd_dashboard_event.dart';
 import 'obd_dashboard_state.dart';
 
@@ -43,11 +39,11 @@ class ObdDashboardBloc extends Bloc<ObdDashboardEvent, ObdDashboardState> {
   String _rxBuffer = '';
 
   Future<void> _onStarted(ObdDashboardStarted event, Emitter<ObdDashboardState> emit) async {
-    emit(state.copyWith(status: ObdDashboardStatus.ready, data: _addLog(state.data, 'Dashboard started')));
+    emit(state.copyWith(status: ObdDashboardStatus.ready, data: _addLog(state.data, 'Bảng điều khiển đã khởi động')));
     await _rxSubscription?.cancel();
     _rxSubscription = _listenObdResponses().listen(
       (raw) => add(ObdRawResponseReceived(raw)),
-      onError: (error) => add(ObdRawResponseReceived('ERROR#$error')),
+      onError: (error) => add(ObdRawResponseReceived('LỖI#$error')),
     );
   }
 
@@ -56,16 +52,16 @@ class ObdDashboardBloc extends Bloc<ObdDashboardEvent, ObdDashboardState> {
       await _sendObdRequest(event.request);
       emit(state.copyWith(data: _addLog(state.data, 'TX: ${event.request}')));
     } catch (e) {
-      emit(state.copyWith(status: ObdDashboardStatus.error, errorMessage: '$e', data: _addLog(state.data, 'TX ERROR: $e')));
+      emit(state.copyWith(status: ObdDashboardStatus.error, errorMessage: '$e', data: _addLog(state.data, 'LỖI GỬI TX: $e')));
     }
   }
 
   Future<void> _onRequestAllPressed(ObdRequestAllPressed event, Emitter<ObdDashboardState> emit) async {
     try {
-      emit(state.copyWith(data: _addLog(state.data, 'Read all requested')));
+      emit(state.copyWith(data: _addLog(state.data, 'Đã yêu cầu đọc toàn bộ dữ liệu')));
       await _requestAllObdData();
     } catch (e) {
-      emit(state.copyWith(status: ObdDashboardStatus.error, errorMessage: '$e', data: _addLog(state.data, 'READ ALL ERROR: $e')));
+      emit(state.copyWith(status: ObdDashboardStatus.error, errorMessage: '$e', data: _addLog(state.data, 'LỖI ĐỌC TOÀN BỘ: $e')));
     }
   }
 
@@ -73,12 +69,12 @@ class ObdDashboardBloc extends Bloc<ObdDashboardEvent, ObdDashboardState> {
     if (state.isPolling) {
       _pollingTimer?.cancel();
       _pollingTimer = null;
-      emit(state.copyWith(status: ObdDashboardStatus.ready, isPolling: false, data: _addLog(state.data, 'Auto polling stopped')));
+      emit(state.copyWith(status: ObdDashboardStatus.ready, isPolling: false, data: _addLog(state.data, 'Đã dừng tự động cập nhật')));
       return;
     }
 
     _pollingTimer = Timer.periodic(const Duration(seconds: 1), (_) => add(const ObdRequestAllPressed()));
-    emit(state.copyWith(status: ObdDashboardStatus.polling, isPolling: true, data: _addLog(state.data, 'Auto polling started')));
+    emit(state.copyWith(status: ObdDashboardStatus.polling, isPolling: true, data: _addLog(state.data, 'Đã bật tự động cập nhật')));
   }
 
   void _onRawResponseReceived(ObdRawResponseReceived event, Emitter<ObdDashboardState> emit) {
@@ -89,7 +85,7 @@ class ObdDashboardBloc extends Bloc<ObdDashboardEvent, ObdDashboardState> {
       currentData = _addLog(currentData, 'RX: $line');
       final frame = _canFrameParser.tryParse(line);
       if (frame == null) {
-        currentData = _addLog(currentData, 'Parse failed: $line');
+        currentData = _addLog(currentData, 'Không phân tích được: $line');
         continue;
       }
 

@@ -1,5 +1,5 @@
-import '../../../../core/utils/hex_utils.dart';
-import '../../domain/entities/can_frame.dart';
+import '../../../../core/core.dart';
+import '../../domain/obd_domain.dart';
 
 class ObdParsedResult {
   const ObdParsedResult({required this.key, required this.value});
@@ -23,9 +23,16 @@ class ObdResponseParser {
         case 0x00:
           if (data.length >= 7) {
             final bitmap = data.sublist(3, 7);
-            final bitmapText = bitmap.map(HexUtils.byteToHex).join(' ');
-            final supported = _decodeSupportedPids(bitmap).map((pid) => '0x${HexUtils.byteToHex(pid)}').join(', ');
-            results.add(ObdParsedResult(key: 'supportedPids', value: '$bitmapText\n$supported'));
+            final supported = _decodeSupportedPids(bitmap)
+                .map(_supportedPidName)
+                .where((name) => name.isNotEmpty)
+                .join('\n');
+            results.add(
+              ObdParsedResult(
+                key: 'supportedPids',
+                value: supported.isEmpty ? 'Chưa nhận diện được PID hỗ trợ' : supported,
+              ),
+            );
           }
           break;
         case 0x04:
@@ -70,12 +77,12 @@ class ObdResponseParser {
     if (data.length >= 5 && data[0] == 0x10 && data[2] == 0x49 && data[3] == 0x02) {
       _vinBuffer = '';
       _vinBuffer += _ascii(data.sublist(5));
-      return _vinBuffer.length >= 17 ? _consumeVin() : 'Receiving... $_vinBuffer';
+      return _vinBuffer.length >= 17 ? _consumeVin() : 'Đang nhận... $_vinBuffer';
     }
 
     if ((data[0] & 0xF0) == 0x20) {
       _vinBuffer += _ascii(data.sublist(1));
-      return _vinBuffer.length >= 17 ? _consumeVin() : 'Receiving... $_vinBuffer';
+      return _vinBuffer.length >= 17 ? _consumeVin() : 'Đang nhận... $_vinBuffer';
     }
 
     return null;
@@ -96,6 +103,49 @@ class ObdResponseParser {
       }
     }
     return result;
+  }
+
+  String _supportedPidName(int pid) {
+    switch (pid) {
+      case 0x01:
+        return 'Trạng thái giám sát sau khi xóa DTC';
+      case 0x02:
+        return 'Mã lỗi đóng băng DTC';
+      case 0x03:
+        return 'Trạng thái hệ thống nhiên liệu';
+      case 0x04:
+        return 'Tải động cơ';
+      case 0x05:
+        return 'Nhiệt độ nước làm mát';
+      case 0x06:
+        return 'Hiệu chỉnh nhiên liệu ngắn hạn - dãy 1';
+      case 0x07:
+        return 'Hiệu chỉnh nhiên liệu dài hạn - dãy 1';
+      case 0x08:
+        return 'Hiệu chỉnh nhiên liệu ngắn hạn - dãy 2';
+      case 0x09:
+        return 'Hiệu chỉnh nhiên liệu dài hạn - dãy 2';
+      case 0x0A:
+        return 'Áp suất nhiên liệu';
+      case 0x0B:
+        return 'Áp suất đường nạp';
+      case 0x0C:
+        return 'Vòng tua động cơ';
+      case 0x0D:
+        return 'Tốc độ xe';
+      case 0x0E:
+        return 'Góc đánh lửa sớm';
+      case 0x0F:
+        return 'Nhiệt độ khí nạp';
+      case 0x10:
+        return 'Lưu lượng khí nạp MAF';
+      case 0x11:
+        return 'Độ mở bướm ga';
+      case 0x1F:
+        return 'Thời gian chạy từ khi khởi động';
+      default:
+        return 'PID 0x${HexUtils.byteToHex(pid)}';
+    }
   }
 
   String _ascii(List<int> bytes) {

@@ -1,5 +1,5 @@
-import '../../domain/repositories/obd_repository.dart';
-import '../datasources/obd_ble_datasource.dart';
+import '../../domain/obd_domain.dart';
+import '../data_sources/obd_ble_datasource.dart';
 
 class ObdRepositoryImpl implements ObdRepository {
   ObdRepositoryImpl(this._dataSource);

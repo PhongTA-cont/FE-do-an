@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'utils/bluetooth_scan.dart';
+
+import 'core/core.dart';
+import 'features/obd/obd.dart';
 
 class ObdSimulatorApp extends StatelessWidget {
   const ObdSimulatorApp({super.key});
@@ -8,8 +10,8 @@ class ObdSimulatorApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'OBD-II Real Scan',
-      theme: ThemeData(colorSchemeSeed: Colors.blue, useMaterial3: true),
+      title: 'Quét OBD-II',
+      theme: AppTheme.light(),
       home: const BluetoothScanPage(),
     );
   }

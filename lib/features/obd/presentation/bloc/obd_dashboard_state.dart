@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import '../../domain/entities/obd_dashboard_data.dart';
+import '../../domain/obd_domain.dart';
 
 enum ObdDashboardStatus { initial, ready, polling, error }
 

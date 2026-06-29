@@ -1,5 +1,5 @@
-import '../../../../core/utils/hex_utils.dart';
-import '../../domain/entities/can_frame.dart';
+import '../../../../core/core.dart';
+import '../../domain/obd_domain.dart';
 
 class CanFrameParser {
   CanFrame? tryParse(String raw) {
